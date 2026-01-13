@@ -104,6 +104,7 @@ model student {
   description              String?
   created                  DateTime?                  @default(now()) @db.Timestamp(6)
   modified                 DateTime?                  @default(now()) @db.Timestamp(6)
+  password                 String                     @db.VarChar(255)
   projectgroupmember       projectgroupmember[]
   projectmeetingattendance projectmeetingattendance[]
 }

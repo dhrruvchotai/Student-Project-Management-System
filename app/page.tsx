@@ -37,12 +37,12 @@ const Navbar = () => (
 
         {/* Auth Buttons  */}
         <div className="flex items-center gap-4">
-          <Link href="/login">
+          <Link href="auth/login">
             <button className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
               Log in
             </button>
           </Link>
-          <Link href="/register">
+          <Link href="/auth/signup">
             <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-lg shadow-indigo-500/20">
               Get Started
             </button>
@@ -120,7 +120,7 @@ export default function Home() {
             <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
               Designed to manage and monitor academic projects efficiently.
               Facilitating group formation, guide allocation, and progress
-              reporting in one systematic environment[cite: 3, 4].
+              reporting in one systematic environment.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/login">
