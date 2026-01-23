@@ -4,16 +4,58 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mail, Lock, GraduationCap, ArrowRight, UserCheck } from "lucide-react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+
+  const router = useRouter();
   const [role, setRole] = useState("student");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
+    const formData = new FormData(e.target as HTMLFormElement);
+    console.log({
+      email: formData.get(
+        role == "student" ? "student_email" : "faculty_email",
+      ),
+      password: formData.get(
+        role == "student" ? "student_password" : "faculty_password",
+      ),
+      role: role,
+    });
+
     e.preventDefault();
     setIsLoading(true);
-    // Simulate login delay
-    setTimeout(() => setIsLoading(false), 2000);
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: formData.get(
+          role == "student" ? "student_email" : "faculty_email",
+        ),
+        password: formData.get(
+          role == "student" ? "student_password" : "faculty_password",
+        ),
+        role: role,
+      }),
+    });
+
+    if (res.status == 200) {
+      toast.success("Logged In Successfully!");
+      router.push(`/dashboard/${role}`);
+    }
+    else if(res.status == 404){
+      toast.error("Please create your account first!");
+      setIsLoading(false);
+      router.push('/auth/signup');
+    }
+    else if(res.status == 401){
+      toast.error("Invalid password!");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -78,6 +120,7 @@ export default function LoginPage() {
             <div className="relative group">
               <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-indigo-500 transition-colors" />
               <input
+                name={role == "student" ? "student_email" : "faculty_email"}
                 type="email"
                 required
                 className="w-full bg-zinc-950/50 border border-white/10 text-white rounded-xl py-3 pl-10 pr-4 outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-zinc-600"
@@ -102,6 +145,9 @@ export default function LoginPage() {
             <div className="relative group">
               <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-indigo-500 transition-colors" />
               <input
+                name={
+                  role == "student" ? "student_password" : "faculty_password"
+                }
                 type="password"
                 required
                 className="w-full bg-zinc-950/50 border border-white/10 text-white rounded-xl py-3 pl-10 pr-4 outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-zinc-600"

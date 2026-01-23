@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   const email = data.email as string;
   const password = data.password as string;
   const role = data.role as string;
-  const hashedPassword = await bcrypt.hash(password, 10) as string;
+  const hashedPassword = (await bcrypt.hash(password, 10)) as string;
 
   console.log(data);
 
@@ -62,11 +62,11 @@ export async function POST(request: Request) {
         },
       });
 
-      return new Response("Staff Registration successful", { status: 201 });
+      return new Response("Staff Registration successful.", { status: 201 });
     } catch (error) {
-      return new Response("Error creating staff", { status: 500 });
+      return new Response("Error creating staff!", { status: 500 });
     }
   } else {
-    return new Response("Invalid role", { status: 400 });
+    return new Response("Invalid role!", { status: 400 });
   }
 }

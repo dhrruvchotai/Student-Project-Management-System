@@ -27,18 +27,19 @@ export default function RegisterPage() {
 
     console.log({
       full_name: formData.get(
-        role == "student" ? "student_full_name" : "faculty_full_name"
+        role == "student" ? "student_full_name" : "faculty_full_name",
       ),
       phone_number: formData.get(
-        role == "student" ? "student_phone_number" : "faculty_phone_number"
+        role == "student" ? "student_phone_number" : "faculty_phone_number",
       ),
       email: formData.get(
-        role == "student" ? "student_email" : "faculty_email"
+        role == "student" ? "student_email" : "faculty_email",
       ),
       password: formData.get(
-        role == "student" ? "student_password" : "faculty_password"
+        role == "student" ? "student_password" : "faculty_password",
       ),
     });
+
     e.preventDefault();
     setIsLoading(true);
     const res = await fetch("/api/auth/signup", {
@@ -48,29 +49,29 @@ export default function RegisterPage() {
       },
       body: JSON.stringify({
         fullname: formData.get(
-          role == "student" ? "student_full_name" : "faculty_full_name"
+          role == "student" ? "student_full_name" : "faculty_full_name",
         ),
         phone_number: formData.get(
-          role == "student" ? "student_phone_number" : "faculty_phone_number"
+          role == "student" ? "student_phone_number" : "faculty_phone_number",
         ),
         email: formData.get(
-          role == "student" ? "student_email" : "faculty_email"
+          role == "student" ? "student_email" : "faculty_email",
         ),
         password: formData.get(
-          role == "student" ? "student_password" : "faculty_password"
+          role == "student" ? "student_password" : "faculty_password",
         ),
         role: role,
       }),
     });
     if (res.status == 201) {
       localStorage.setItem(
-        "username",
+        "user",
         JSON.stringify({
           name: formData.get(
-            role == "student" ? "student_full_name" : "faculty_full_name"
+            role == "student" ? "student_full_name" : "faculty_full_name",
           ),
           role: role,
-        })
+        }),
       );
       toast.success("Account Created Successfully!");
       router.push(`/dashboard/${role}`);
