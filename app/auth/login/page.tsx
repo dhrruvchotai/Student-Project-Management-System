@@ -44,8 +44,17 @@ export default function LoginPage() {
     });
 
     if (res.status == 200) {
+       localStorage.setItem(
+        "user",
+        JSON.stringify({
+          email: formData.get(
+            role == "student" ? "student_email" : "faculty_email",
+          ),
+          role: role,
+        }),
+      );
       toast.success("Logged In Successfully!");
-      router.push(`/dashboard/${role}`);
+      router.push(`/${role}/dashboard/`);
     }
     else if(res.status == 404){
       toast.error("Please create your account first!");

@@ -19,16 +19,17 @@ import {
   MessageSquare,
   MoreVertical,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
-// --- Mock Data based on Schema ---
 const studentProject = {
   title: "AI-Based Traffic Management System",
-  type: "Major Project", // [cite: 38]
-  guide: "Dr. Sarah Wilson", //
+  type: "Major Project",
+  guide: "Dr. Sarah Wilson",
   status: "In Progress",
   progress: 65,
   members: [
-    { name: "Alex Johnson", role: "Leader", id: "CS001" }, // [cite: 48]
+    { name: "Alex Johnson", role: "Leader", id: "CS001" },
     { name: "Sam Smith", role: "Member", id: "CS002" },
     { name: "Emily Davis", role: "Member", id: "CS003" },
   ],
@@ -51,14 +52,22 @@ const upcomingMeetings = [
   },
 ];
 
-// --- Components ---
-
-const SidebarItem = ({ icon: Icon, label, active = false }: any) => (
+//components
+const SidebarItem = ({
+  icon: Icon,
+  label,
+  active = false,
+  danger = false,
+  onClick,
+}: any) => (
   <div
+    onClick={onClick}
     className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all ${
-      active
-        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
-        : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+      danger
+        ? "text-red-500 hover:bg-red-500/10 hover:text-red-400"
+        : active
+          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
+          : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
     }`}
   >
     <Icon className="h-5 w-5" />
@@ -91,14 +100,37 @@ const StatCard = ({ label, value, icon: Icon, color, delay }: any) => (
 );
 
 export default function StudentDashboard() {
+  const router = useRouter();
   const [initial, setInitial] = useState<string>("");
   useEffect(() => {
     const user = localStorage.getItem("user");
-    console.log(user);
     if (user) {
-      setInitial(user.charAt(0).toUpperCase());
+      const parsedUser = JSON.parse(user);
+      const email = parsedUser.email;
+      if (email) {
+        setInitial(email.charAt(0).toUpperCase());
+      }
     }
   }, []);
+
+  //logout function
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+
+      if (res.status == 200) {
+        localStorage.removeItem("user");
+        toast.success("Logged Out Successfully!");
+        router.push(`/`);
+      } else {
+        toast.error("An Error Occurred While Logging Out!");
+      }
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex font-sans selection:bg-indigo-500/30">
@@ -121,7 +153,12 @@ export default function StudentDashboard() {
 
         <div className="pt-6 border-t border-white/10 space-y-2">
           <SidebarItem icon={Settings} label="Settings" />
-          <SidebarItem icon={LogOut} label="Logout" />
+          <SidebarItem
+            icon={LogOut}
+            label="Logout"
+            danger
+            onClick={handleLogout}
+          />
         </div>
       </aside>
 
@@ -154,9 +191,7 @@ export default function StudentDashboard() {
             </button>
             <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-[1px]">
               <div className="h-full w-full rounded-full bg-zinc-900 flex items-center justify-center">
-                <span className="font-bold text-xs">
-                  {initial}
-                </span>
+                <span className="font-bold text-md">{initial}</span>
               </div>
             </div>
           </div>

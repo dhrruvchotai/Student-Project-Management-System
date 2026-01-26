@@ -67,14 +67,14 @@ export default function RegisterPage() {
       localStorage.setItem(
         "user",
         JSON.stringify({
-          name: formData.get(
-            role == "student" ? "student_full_name" : "faculty_full_name",
+          email: formData.get(
+            role == "student" ? "student_email" : "faculty_email",
           ),
           role: role,
         }),
       );
       toast.success("Account Created Successfully!");
-      router.push(`/dashboard/${role}`);
+      router.push(`/${role}/dashboard`);
     }
     setIsLoading(false);
   };
