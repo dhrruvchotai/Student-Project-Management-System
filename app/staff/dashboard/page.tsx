@@ -16,11 +16,13 @@ import {
   Plus,
   GraduationCap,
   ChevronRight,
-  Loader2, // Added for loading state
+  Loader2,
   Clock,
+  MapPin,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import ProfileModal from "@/app/components/ProfileModal";
 
 // --- Types for API Data ---
 interface ProjectGroup {
@@ -34,40 +36,29 @@ interface ProjectGroup {
   totalMembers: number;
 }
 
-// --- Mock Data for other sections (keeping these as requested) ---
-const pendingApprovals = [
-  {
-    id: 1,
-    studentName: "Group: Alpha Squad",
-    document: "Project Proposal",
-    date: "Oct 25, 2024",
-    type: "Approval",
-  },
-  {
-    id: 2,
-    studentName: "Group: Code Wizards",
-    document: "Phase 1 Report",
-    date: "Oct 26, 2024",
-    type: "Review",
-  },
-];
+interface DashboardStats {
+  groupsSupervised: number;
+  totalMeetings: number;
+  totalStudents: number;
+  upcomingMeetings: number;
+}
 
-const upcomingMeetings = [
-  {
-    id: 1,
-    title: "Weekly Sync - Alpha Squad",
-    date: "Oct 24, 2:00 PM",
-    status: "Scheduled",
-    location: "Lab 3",
-  },
-  {
-    id: 2,
-    title: "Proposal Defense - Beta Group",
-    date: "Nov 01, 10:00 AM",
-    status: "Pending",
-    location: "Conf Room",
-  },
-];
+interface Meeting {
+  id: number;
+  groupName: string;
+  projectTitle: string;
+  dateTime: string;
+  purpose: string;
+  location: string;
+  notes: string;
+  status: string;
+  attendees: {
+    studentId: number;
+    studentName: string;
+    isPresent: boolean;
+    remarks: string;
+  }[];
+}
 
 // --- Components ---
 const SidebarItem = ({
@@ -79,20 +70,19 @@ const SidebarItem = ({
 }: any) => (
   <div
     onClick={onClick}
-    className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all ${
-      danger
-        ? "text-red-500 hover:bg-red-500/10 hover:text-red-400"
-        : active
-          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
-          : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-    }`}
+    className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all ${danger
+      ? "text-red-500 hover:bg-red-500/10 hover:text-red-400"
+      : active
+        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
+        : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+      }`}
   >
     <Icon className="h-5 w-5" />
     <span className="font-medium text-sm">{label}</span>
   </div>
 );
 
-const StatCard = ({ label, value, icon: Icon, color, delay }: any) => (
+const StatCard = ({ label, value, icon: Icon, color, delay, loading }: any) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -110,7 +100,11 @@ const StatCard = ({ label, value, icon: Icon, color, delay }: any) => (
       >
         <Icon className={`h-5 w-5 ${color.replace("text-", "text-")}`} />
       </div>
-      <h3 className="text-3xl font-bold text-white mb-1">{value}</h3>
+      {loading ? (
+        <div className="h-9 w-16 bg-zinc-800 rounded animate-pulse mb-1" />
+      ) : (
+        <h3 className="text-3xl font-bold text-white mb-1">{value}</h3>
+      )}
       <p className="text-zinc-500 text-sm">{label}</p>
     </div>
   </motion.div>
@@ -118,32 +112,73 @@ const StatCard = ({ label, value, icon: Icon, color, delay }: any) => (
 
 export default function StaffDashboard() {
   const router = useRouter();
+  const [userName, setUserName] = useState<string>("");
   const [initial, setInitial] = useState<string>("");
+  const [profileOpen, setProfileOpen] = useState(false);
 
   // State for Project Groups API
   const [groups, setGroups] = useState<ProjectGroup[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [projectGroupsLoading, setProjectGroupsLoading] = useState(true);
 
-  // 1. Fetch User Initials
+  // State for Dashboard Stats
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  // State for Meetings
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [meetingsLoading, setMeetingsLoading] = useState(true);
+
+  // 1. Fetch User Info & Auth Check
   useEffect(() => {
     const user = localStorage.getItem("user");
-    if (user) {
-      const parsedUser = JSON.parse(user);
-      const email = parsedUser.email;
-      if (email) {
-        setInitial(email.charAt(0).toUpperCase());
-      }
+    if (!user) {
+      router.push("/auth/login");
+      return;
     }
-  }, []);
+    const parsedUser = JSON.parse(user);
+    if (parsedUser.role !== "staff") {
+      router.push("/auth/login");
+      return;
+    }
+    setUserName(parsedUser.name || "");
+    const email = parsedUser.email;
+    if (email) {
+      setInitial(email.charAt(0).toUpperCase());
+    }
+  }, [router]);
 
-  // 2. Fetch Project Groups from API
+  // 2. Fetch Dashboard Stats from API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/staff/dashboard/stats");
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        } else if (response.status === 401) {
+          router.push("/auth/login");
+        } else {
+          console.error("Failed to fetch stats");
+        }
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
+  }, [router]);
+
+  // 3. Fetch Project Groups for this Staff
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await fetch("/api/project-groups"); // Using relative path
+        const response = await fetch("/api/staff/project-groups");
         if (response.ok) {
           const data = await response.json();
           setGroups(data);
+        } else if (response.status === 401) {
+          router.push("/auth/login");
         } else {
           console.error("Failed to fetch groups");
           toast.error("Could not load project groups");
@@ -151,12 +186,33 @@ export default function StaffDashboard() {
       } catch (error) {
         console.error("Error fetching groups:", error);
       } finally {
-        setLoading(false);
+        setProjectGroupsLoading(false);
       }
     };
-
     fetchGroups();
-  }, []);
+  }, [router]);
+
+  // 4. Fetch Meetings from API
+  useEffect(() => {
+    const fetchMeetings = async () => {
+      try {
+        const response = await fetch("/api/staff/meetings");
+        if (response.ok) {
+          const data = await response.json();
+          setMeetings(data);
+        } else if (response.status === 401) {
+          router.push("/auth/login");
+        } else {
+          console.error("Failed to fetch meetings");
+        }
+      } catch (error) {
+        console.error("Error fetching meetings:", error);
+      } finally {
+        setMeetingsLoading(false);
+      }
+    };
+    fetchMeetings();
+  }, [router]);
 
   const handleLogout = async () => {
     try {
@@ -176,8 +232,31 @@ export default function StaffDashboard() {
     }
   };
 
+  // Helper to format meeting date
+  const formatMeetingDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const hour12 = hours % 12 || 12;
+    return {
+      month,
+      day: day.toString(),
+      time: `${hour12}:${minutes} ${ampm}`,
+    };
+  };
+
+  // Get upcoming meetings (status = Scheduled)
+  const upcomingMeetingsList = meetings
+    .filter((m) => m.status === "Scheduled")
+    .slice(0, 5);
+
   return (
     <div className="min-h-screen bg-black text-white flex font-sans selection:bg-indigo-500/30">
+      <ProfileModal isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
       {/* Sidebar Navigation */}
       <aside className="w-64 border-r border-white/10 h-screen fixed top-0 left-0 bg-black/50 backdrop-blur-xl hidden md:flex flex-col p-6 z-50">
         <div className="flex items-center gap-3 mb-10 px-2">
@@ -194,8 +273,8 @@ export default function StaffDashboard() {
             label="My Groups"
             onClick={() => router.push("/staff/dashboard/my-groups")}
           />
-          <SidebarItem icon={FileCheck} label="Approvals" />
-          <SidebarItem icon={ClipboardCheck} label="Evaluations" />
+          <SidebarItem icon={FileCheck} label="Approvals" onClick={() => router.push("/staff/approvals")} />
+          <SidebarItem icon={ClipboardCheck} label="Evaluations" onClick={() => router.push("/staff/evaluations")} />
           <SidebarItem icon={Calendar} label="Schedule" />
         </nav>
 
@@ -220,7 +299,7 @@ export default function StaffDashboard() {
           <div>
             <h1 className="text-2xl font-bold text-white">Faculty Dashboard</h1>
             <p className="text-zinc-400 text-sm">
-              Manage your project groups and evaluations
+              {userName ? `Welcome back, ${userName}` : "Manage your project groups and evaluations"}
             </p>
           </div>
 
@@ -235,13 +314,20 @@ export default function StaffDashboard() {
             </div>
             <button className="h-10 w-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center hover:bg-zinc-800 transition-colors relative">
               <Bell className="h-4 w-4 text-zinc-400" />
-              <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-zinc-900"></span>
+              {stats && stats.upcomingMeetings > 0 && (
+                <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-zinc-900"></span>
+              )}
             </button>
-            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-[1px]">
+            {/* Clickable Profile Avatar */}
+            <button
+              onClick={() => setProfileOpen(true)}
+              className="h-10 w-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-[1px] hover:scale-105 transition-transform cursor-pointer"
+              title="View Profile"
+            >
               <div className="h-full w-full rounded-full bg-zinc-900 flex items-center justify-center">
                 <span className="font-bold text-md">{initial}</span>
               </div>
-            </div>
+            </button>
           </div>
         </header>
 
@@ -249,99 +335,58 @@ export default function StaffDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             label="Groups Supervised"
-            value={groups.length.toString()} // Real Data
+            value={stats?.groupsSupervised?.toString() || "0"}
             icon={Users}
             color="text-indigo-500"
             delay={0.1}
+            loading={statsLoading}
           />
           <StatCard
-            label="Pending Approvals"
-            value="2" // Mock
-            icon={FileCheck}
+            label="Total Students"
+            value={stats?.totalStudents?.toString() || "0"}
+            icon={GraduationCap}
             color="text-orange-500"
             delay={0.2}
+            loading={statsLoading}
           />
           <StatCard
-            label="Evaluations Due"
-            value="5" // Mock
-            icon={ClipboardCheck}
+            label="Total Meetings"
+            value={stats?.totalMeetings?.toString() || "0"}
+            icon={Calendar}
             color="text-emerald-500"
             delay={0.3}
+            loading={statsLoading}
           />
           <StatCard
-            label="Total Documents"
-            value="28" // Mock
-            icon={FileText}
+            label="Upcoming Meetings"
+            value={stats?.upcomingMeetings?.toString() || "0"}
+            icon={Clock}
             color="text-blue-500"
             delay={0.4}
+            loading={statsLoading}
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Active Groups & Approvals */}
+          {/* Left Column - Active Groups */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Pending Approvals Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-zinc-900 border border-white/10 rounded-2xl p-6"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold text-white">Pending Approvals</h3>
-                <span className="text-xs text-orange-400 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">
-                  2 Pending
-                </span>
-              </div>
-              <div className="space-y-3">
-                {pendingApprovals.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-zinc-800/30 rounded-xl border border-white/5 gap-4"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                        <FileText className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-white">
-                          {item.document}
-                        </h4>
-                        <p className="text-xs text-zinc-400">
-                          {item.studentName} • {item.date}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      <button className="flex-1 sm:flex-none px-4 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-500 text-xs font-medium rounded-lg border border-green-500/20 transition-colors">
-                        Approve
-                      </button>
-                      <button className="flex-1 sm:flex-none px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-medium rounded-lg border border-red-500/20 transition-colors">
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
             {/* Supervised Groups Overview - LINKED TO API */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.5 }}
               className="bg-zinc-900 border border-white/10 rounded-2xl p-6 relative overflow-hidden"
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-bold text-white">Supervised Groups</h3>
-                <button className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1" onClick={()=>{
+                <button className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1" onClick={() => {
                   router.push('/staff/dashboard/my-groups')
                 }}>
                   View All <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
 
-              {loading ? (
+              {projectGroupsLoading ? (
                 // Loading Skeleton for Groups
                 <div className="space-y-4 flex flex-col items-center py-10">
                   <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
@@ -359,9 +404,7 @@ export default function StaffDashboard() {
               ) : (
                 // Real Data List
                 <div className="grid gap-4">
-                  {groups.map((group) => {
-                    // Visual logic based on API Data
-                    // Note: API returns averageCPI (0-10). We map this to a visual progress (0-100)
+                  {groups.slice(0, 5).map((group) => {
                     const progressPercentage = group.averageCPI
                       ? group.averageCPI * 10
                       : 10;
@@ -433,7 +476,7 @@ export default function StaffDashboard() {
                     Grade Project
                   </span>
                 </button>
-                <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
+                <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10" onClick={() => router.push("/staff/dashboard/my-groups")}>
                   <Users className="h-5 w-5 text-orange-400" />
                   <span className="text-xs font-medium text-gray-300">
                     Manage Groups
@@ -448,7 +491,7 @@ export default function StaffDashboard() {
               </div>
             </motion.div>
 
-            {/* Upcoming Meetings */}
+            {/* Upcoming Meetings - REAL DATA */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -462,32 +505,53 @@ export default function StaffDashboard() {
                 </button>
               </div>
 
-              <div className="space-y-4">
-                {upcomingMeetings.map((meeting) => (
-                  <div
-                    key={meeting.id}
-                    className="flex gap-3 items-start pb-4 border-b border-white/5 last:border-0 last:pb-0"
-                  >
-                    <div className="h-10 w-10 rounded-lg bg-zinc-800 flex flex-col items-center justify-center border border-white/5 shrink-0">
-                      <span className="text-[10px] text-zinc-500 font-bold uppercase">
-                        {meeting.date.split(",")[0].split(" ")[0]}
-                      </span>
-                      <span className="text-sm font-bold text-white">
-                        {meeting.date.split(",")[0].split(" ")[1]}
-                      </span>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-white leading-tight mb-1">
-                        {meeting.title}
-                      </h4>
-                      <div className="flex items-center gap-2 text-xs text-zinc-500">
-                        <Clock className="h-3 w-3" />{" "}
-                        {meeting.date.split(",")[1]}
+              {meetingsLoading ? (
+                <div className="flex flex-col items-center py-8">
+                  <Loader2 className="h-6 w-6 text-indigo-500 animate-spin mb-2" />
+                  <p className="text-zinc-500 text-sm">Loading meetings...</p>
+                </div>
+              ) : upcomingMeetingsList.length === 0 ? (
+                <div className="text-center py-8">
+                  <Calendar className="h-8 w-8 text-zinc-600 mx-auto mb-2" />
+                  <p className="text-zinc-500 text-sm">No upcoming meetings</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {upcomingMeetingsList.map((meeting) => {
+                    const dateInfo = formatMeetingDate(meeting.dateTime);
+                    return (
+                      <div
+                        key={meeting.id}
+                        className="flex gap-3 items-start pb-4 border-b border-white/5 last:border-0 last:pb-0"
+                      >
+                        <div className="h-10 w-10 rounded-lg bg-zinc-800 flex flex-col items-center justify-center border border-white/5 shrink-0">
+                          <span className="text-[10px] text-zinc-500 font-bold uppercase">
+                            {dateInfo.month}
+                          </span>
+                          <span className="text-sm font-bold text-white">
+                            {dateInfo.day}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-white leading-tight mb-1 truncate">
+                            {meeting.purpose || meeting.groupName}
+                          </h4>
+                          <div className="flex items-center gap-2 text-xs text-zinc-500">
+                            <Clock className="h-3 w-3 shrink-0" /> {dateInfo.time}
+                            {meeting.location && (
+                              <>
+                                <span className="text-zinc-700">•</span>
+                                <MapPin className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{meeting.location}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <button className="w-full mt-4 py-2 border border-white/10 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors">
                 View Full Schedule

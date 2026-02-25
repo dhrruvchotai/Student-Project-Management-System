@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { NextResponse } from "next/server";
+import { signToken } from "@/lib/jwt";
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
   const data = await request.json();
@@ -11,10 +14,8 @@ export async function POST(request: Request) {
   const role = data.role as string;
   const hashedPassword = (await bcrypt.hash(password, 10)) as string;
 
-  console.log(data);
-
   if (!fullName || !phoneNumber || !email || !password) {
-    return new Response("All fields are required!", { status: 400 });
+    return NextResponse.json("All fields are required!", { status: 400 });
   }
 
   if (role == "student") {
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
       });
 
       if (existingStudent) {
-        return new Response("Student with this email already exists!", {
+        return NextResponse.json("Student with this email already exists!", {
           status: 409,
         });
       }
@@ -37,19 +38,42 @@ export async function POST(request: Request) {
           description: "",
         },
       });
-      return new Response("Student Registration successful", { status: 201 });
+
+      const token = signToken({
+        userId: student.studentid,
+        email: student.email || "",
+        role: "student",
+      });
+
+      const cookieStore = await cookies();
+      cookieStore.set("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: "/",
+      });
+
+      return NextResponse.json(
+        {
+          id: student.studentid,
+          name: student.studentname,
+          email: student.email,
+          role: "student",
+        },
+        { status: 201 }
+      );
     } catch (error) {
-      return new Response("Error creating student!", { status: 500 });
+      return NextResponse.json("Error creating student!", { status: 500 });
     }
   } else if (role == "staff") {
     try {
-      console.log(data);
       const existingStaff = await prisma.staff.findUnique({
         where: { email: email },
       });
 
       if (existingStaff) {
-        return new Response("Staff with this email already exists!", {
+        return NextResponse.json("Staff with this email already exists!", {
           status: 409,
         });
       }
@@ -62,11 +86,34 @@ export async function POST(request: Request) {
         },
       });
 
-      return new Response("Staff Registration successful.", { status: 201 });
+      const token = signToken({
+        userId: staff.staffid,
+        email: staff.email || "",
+        role: "staff",
+      });
+
+      const cookieStore = await cookies();
+      cookieStore.set("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: "/",
+      });
+
+      return NextResponse.json(
+        {
+          id: staff.staffid,
+          name: staff.staffname,
+          email: staff.email,
+          role: "staff",
+        },
+        { status: 201 }
+      );
     } catch (error) {
-      return new Response("Error creating staff!", { status: 500 });
+      return NextResponse.json("Error creating staff!", { status: 500 });
     }
   } else {
-    return new Response("Invalid role!", { status: 400 });
+    return NextResponse.json("Invalid role!", { status: 400 });
   }
 }

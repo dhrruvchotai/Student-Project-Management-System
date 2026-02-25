@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+Student_Project_Docs.docx
+_doc_output.txt

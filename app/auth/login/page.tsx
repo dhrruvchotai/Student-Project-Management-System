@@ -14,55 +14,56 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
-    const formData = new FormData(e.target as HTMLFormElement);
-    console.log({
-      email: formData.get(
-        role == "student" ? "student_email" : "faculty_email",
-      ),
-      password: formData.get(
-        role == "student" ? "student_password" : "faculty_password",
-      ),
-      role: role,
-    });
-
     e.preventDefault();
     setIsLoading(true);
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: formData.get(
-          role == "student" ? "student_email" : "faculty_email",
-        ),
-        password: formData.get(
-          role == "student" ? "student_password" : "faculty_password",
-        ),
-        role: role,
-      }),
-    });
 
-    if (res.status == 200) {
-       localStorage.setItem(
-        "user",
-        JSON.stringify({
-          email: formData.get(
-            role == "student" ? "student_email" : "faculty_email",
-          ),
-          role: role,
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get(
+      role == "student" ? "student_email" : "faculty_email",
+    ) as string;
+    const password = formData.get(
+      role == "student" ? "student_password" : "faculty_password",
+    ) as string;
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          role,
         }),
-      );
-      toast.success("Logged In Successfully!");
-      router.push(`/${role}/dashboard/`);
-    }
-    else if(res.status == 404){
-      toast.error("Please create your account first!");
-      setIsLoading(false);
-      router.push('/auth/signup');
-    }
-    else if(res.status == 401){
-      toast.error("Invalid password!");
+      });
+
+      if (res.status == 200) {
+        const userData = await res.json();
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+          }),
+        );
+        toast.success("Logged In Successfully!");
+        router.push(`/${userData.role}/dashboard/`);
+      } else if (res.status == 404) {
+        toast.error("Please create your account first!");
+        setIsLoading(false);
+        router.push('/auth/signup');
+      } else if (res.status == 401) {
+        toast.error("Invalid password!");
+        setIsLoading(false);
+      } else {
+        toast.error("An error occurred!");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      toast.error("Network error!");
       setIsLoading(false);
     }
   };
@@ -100,22 +101,20 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setRole("student")}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium rounded-lg transition-all duration-300 ${
-                role === "student"
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium rounded-lg transition-all duration-300 ${role === "student"
                   ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
                   : "text-gray-400 hover:text-white"
-              }`}
+                }`}
             >
               <GraduationCap className="w-4 h-4" /> Student
             </button>
             <button
               type="button"
               onClick={() => setRole("staff")}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium rounded-lg transition-all duration-300 ${
-                role === "staff"
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium rounded-lg transition-all duration-300 ${role === "staff"
                   ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
                   : "text-gray-400 hover:text-white"
-              }`}
+                }`}
             >
               <UserCheck className="w-4 h-4" /> Faculty
             </button>
