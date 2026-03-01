@@ -66,3 +66,69 @@ export async function GET() {
         );
     }
 }
+
+export async function POST(req: Request) {
+    const user = await getAuthUser();
+    if (!user || user.role !== "staff") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    try {
+        const body = await req.json();
+        const { groupId, dateTime, purpose, location } = body;
+
+        if (!groupId || !dateTime || !purpose) {
+            return NextResponse.json(
+                { error: "Missing required fields" },
+                { status: 400 }
+            );
+        }
+
+        // Get staff name
+        const staff = await prisma.staff.findUnique({
+            where: { staffid: user.userId },
+        });
+
+        if (!staff) {
+            return NextResponse.json({ error: "Staff not found" }, { status: 404 });
+        }
+
+        // Verify that the staff is associated with this group
+        const group = await prisma.projectgroup.findFirst({
+            where: {
+                projectgroupid: parseInt(groupId),
+                OR: [
+                    { guidestaffname: staff.staffname },
+                    { convenerstaffid: user.userId },
+                    { expertstaffid: user.userId },
+                ]
+            }
+        });
+
+        if (!group) {
+            return NextResponse.json(
+                { error: "You are not authorized to schedule a meeting for this group" },
+                { status: 403 }
+            );
+        }
+
+        const newMeeting = await prisma.projectmeeting.create({
+            data: {
+                projectgroupid: parseInt(groupId),
+                guidestaffid: user.userId,
+                meetingdatetime: new Date(dateTime),
+                meetingpurpose: purpose,
+                meetinglocation: location || "",
+                meetingstatus: "Scheduled",
+            }
+        });
+
+        return NextResponse.json(newMeeting, { status: 201 });
+    } catch (error) {
+        console.error("Error creating meeting:", error);
+        return NextResponse.json(
+            { error: "Internal Server Error" },
+            { status: 500 }
+        );
+    }
+}

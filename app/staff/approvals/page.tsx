@@ -147,7 +147,7 @@ export default function ApprovalsPage() {
                     <SidebarItem icon={Users} label="My Groups" onClick={() => router.push("/staff/dashboard/my-groups")} />
                     <SidebarItem icon={FileCheck} label="Approvals" active />
                     <SidebarItem icon={ClipboardCheck} label="Evaluations" onClick={() => router.push("/staff/evaluations")} />
-                    <SidebarItem icon={Calendar} label="Schedule" />
+                    <SidebarItem icon={Calendar} label="Schedule" onClick={() => router.push("/staff/meetings")} />
                 </nav>
                 <div className="pt-6 border-t border-white/10 space-y-2">
                     <SidebarItem icon={Settings} label="Settings" />

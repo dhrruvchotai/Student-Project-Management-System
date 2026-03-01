@@ -207,7 +207,7 @@ export default function StudentDashboard() {
           <SidebarItem icon={FolderOpen} label="My Project" onClick={() => router.push("/student/project")} />
           <SidebarItem icon={Users} label="Group Members" onClick={() => router.push("/student/group-members")} />
           <SidebarItem icon={Calendar} label="Meetings" onClick={() => router.push("/student/meetings")} />
-          <SidebarItem icon={FileText} label="Documents" />
+          <SidebarItem icon={FileText} label="Documents" onClick={() => router.push("/student/documents")} />
         </nav>
 
         <div className="pt-6 border-t border-white/10 space-y-2">
@@ -451,30 +451,34 @@ export default function StudentDashboard() {
             >
               <h3 className="font-bold text-white mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-3">
-                <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
+                <button
+                  onClick={() => router.push("/student/documents/upload")}
+                  className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
                   <UploadCloud className="h-5 w-5 text-indigo-400" />
                   <span className="text-xs font-medium text-gray-300">
                     Upload Doc
                   </span>
                 </button>
-                <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
+                {/* <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
                   <MessageSquare className="h-5 w-5 text-emerald-400" />
                   <span className="text-xs font-medium text-gray-300">
                     Contact Guide
                   </span>
-                </button>
-                <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
+                </button> */}
+                <button
+                  onClick={() => router.push("/student/meetings")}
+                  className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
                   <Calendar className="h-5 w-5 text-orange-400" />
                   <span className="text-xs font-medium text-gray-300">
                     Schedule
                   </span>
                 </button>
-                <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
+                {/* <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
                   <FileText className="h-5 w-5 text-blue-400" />
                   <span className="text-xs font-medium text-gray-300">
                     Reports
                   </span>
-                </button>
+                </button> */}
               </div>
             </motion.div>
 

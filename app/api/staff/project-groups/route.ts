@@ -93,6 +93,7 @@ export async function GET() {
                 totalMembers: group.projectgroupmember.length,
                 memberNames: otherMembers,
                 status: group.projecttitle ? "Active" : "Draft",
+                projectGrade: group.projectgrade || "Not Graded",
                 createdAt: group.created,
             };
         });

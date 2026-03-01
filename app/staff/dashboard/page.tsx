@@ -275,7 +275,7 @@ export default function StaffDashboard() {
           />
           <SidebarItem icon={FileCheck} label="Approvals" onClick={() => router.push("/staff/approvals")} />
           <SidebarItem icon={ClipboardCheck} label="Evaluations" onClick={() => router.push("/staff/evaluations")} />
-          <SidebarItem icon={Calendar} label="Schedule" />
+          <SidebarItem icon={Calendar} label="Schedule" onClick={() => router.push("/staff/meetings")} />
         </nav>
 
         <div className="pt-6 border-t border-white/10 space-y-2">
@@ -464,13 +464,19 @@ export default function StaffDashboard() {
             >
               <h3 className="font-bold text-white mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-3">
-                <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
+                <button
+                  onClick={() => router.push("/staff/meetings/create")}
+                  className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10"
+                >
                   <Plus className="h-5 w-5 text-indigo-400" />
                   <span className="text-xs font-medium text-gray-300">
                     Create Meeting
                   </span>
                 </button>
-                <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
+                <button
+                  onClick={() => router.push("/staff/evaluations/grade")}
+                  className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10"
+                >
                   <ClipboardCheck className="h-5 w-5 text-emerald-400" />
                   <span className="text-xs font-medium text-gray-300">
                     Grade Project
@@ -482,12 +488,12 @@ export default function StaffDashboard() {
                     Manage Groups
                   </span>
                 </button>
-                <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
+                {/* <button className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border border-white/5 hover:border-white/10">
                   <FileText className="h-5 w-5 text-blue-400" />
                   <span className="text-xs font-medium text-gray-300">
                     Reports
                   </span>
-                </button>
+                </button> */}
               </div>
             </motion.div>
 

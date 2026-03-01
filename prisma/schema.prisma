@@ -15,6 +15,7 @@ model projectgroup {
   projecttitle                              String?              @db.VarChar(500)
   projectarea                               String?              @db.VarChar(255)
   projectdescription                        String?
+  projectgrade                              String?              @db.VarChar(10)
   averagecpi                                Decimal?             @db.Decimal(4, 2)
   convenerstaffid                           Int?
   expertstaffid                             Int?
@@ -26,6 +27,7 @@ model projectgroup {
   projecttype                               projecttype?         @relation(fields: [projecttypeid], references: [projecttypeid], onDelete: NoAction, onUpdate: NoAction)
   projectgroupmember                        projectgroupmember[]
   projectmeeting                            projectmeeting[]
+  projectdocument                           projectdocument[]
 }
 
 model projectgroupmember {
@@ -107,4 +109,17 @@ model student {
   password                 String                     @db.VarChar(255)
   projectgroupmember       projectgroupmember[]
   projectmeetingattendance projectmeetingattendance[]
+  projectdocument          projectdocument[]
+}
+
+model projectdocument {
+  documentid       Int           @id @default(autoincrement())
+  projectgroupid   Int?
+  studentid        Int?
+  filename         String        @db.VarChar(255)
+  filepath         String        @db.VarChar(500)
+  uploadedat       DateTime?     @default(now()) @db.Timestamp(6)
+
+  projectgroup     projectgroup? @relation(fields: [projectgroupid], references: [projectgroupid], onDelete: Cascade)
+  student          student?      @relation(fields: [studentid], references: [studentid], onDelete: Cascade)
 }

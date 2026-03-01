@@ -176,7 +176,7 @@ export default function EvaluationsPage() {
                     <SidebarItem icon={Users} label="My Groups" onClick={() => router.push("/staff/dashboard/my-groups")} />
                     <SidebarItem icon={FileCheck} label="Approvals" onClick={() => router.push("/staff/approvals")} />
                     <SidebarItem icon={ClipboardCheck} label="Evaluations" active />
-                    <SidebarItem icon={Calendar} label="Schedule" />
+                    <SidebarItem icon={Calendar} label="Schedule" onClick={() => router.push("/staff/meetings")} />
                 </nav>
                 <div className="pt-6 border-t border-white/10 space-y-2">
                     <SidebarItem icon={Settings} label="Settings" />
