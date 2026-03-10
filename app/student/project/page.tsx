@@ -47,10 +47,10 @@ const SidebarItem = ({
     <div
         onClick={onClick}
         className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all ${danger
-                ? "text-red-500 hover:bg-red-500/10 hover:text-red-400"
-                : active
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+            ? "text-red-500 hover:bg-red-500/10 hover:text-red-400"
+            : active
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
+                : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
             }`}
     >
         <Icon className="h-5 w-5" />
@@ -173,9 +173,15 @@ export default function MyProjectPage() {
                     >
                         <FolderOpen className="h-16 w-16 text-zinc-700 mb-4" />
                         <h3 className="text-xl font-bold text-white mb-2">No Project Assigned</h3>
-                        <p className="text-zinc-500 text-sm max-w-xs">
-                            You are not currently part of any project group. Please contact your coordinator.
+                        <p className="text-zinc-500 text-sm max-w-xs mb-6">
+                            You are not currently part of any project group. You can request a new project to an available faculty.
                         </p>
+                        <button
+                            onClick={() => router.push("/student/project/request")}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors"
+                        >
+                            Request Project
+                        </button>
                     </motion.div>
                 ) : (
                     <div className="space-y-6">
@@ -198,8 +204,8 @@ export default function MyProjectPage() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className={`px-3 py-1.5 text-xs font-medium rounded-full border ${project.status === "Active"
-                                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                                                : "bg-zinc-800 text-zinc-400 border-white/10"
+                                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                            : "bg-zinc-800 text-zinc-400 border-white/10"
                                             }`}>
                                             {project.status}
                                         </span>

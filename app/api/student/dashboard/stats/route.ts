@@ -18,6 +18,23 @@ export async function GET() {
             return NextResponse.json({ error: "Student not found" }, { status: 404 });
         }
 
+        // Fetch Project Requests
+        const projectRequests = await prisma.projectrequest.findMany({
+            where: { studentid: student.studentid },
+            include: { staff: { select: { staffname: true } } },
+            orderBy: { created: 'desc' },
+            take: 5
+        });
+
+        const formattedRequests = projectRequests.map(req => ({
+            id: req.requestid,
+            title: req.title,
+            category: req.category,
+            status: req.status,
+            staffName: req.staff?.staffname || "Unknown",
+            created: req.created
+        }));
+
         // Get Project Group
         const groupMember = await prisma.projectgroupmember.findFirst({
             where: { studentid: student.studentid },
@@ -41,6 +58,7 @@ export async function GET() {
                 project: null,
                 upcomingMeetings: [],
                 members: [],
+                projectRequests: formattedRequests,
             });
         }
 
@@ -120,6 +138,7 @@ export async function GET() {
                 name: m.student?.studentname || "Unknown",
                 role: m.isgroupleader === 1 ? "Leader" : "Member",
             })),
+            projectRequests: formattedRequests,
         });
     } catch (error) {
         console.error("Dashboard Stats Error:", error);

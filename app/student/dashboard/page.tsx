@@ -47,6 +47,15 @@ interface Member {
   role: string;
 }
 
+interface ProjectRequest {
+  id: number;
+  title: string;
+  category: string;
+  status: string;
+  staffName: string;
+  created: string;
+}
+
 interface DashboardStats {
   attendance: number;
   tasksPending: number;
@@ -123,6 +132,7 @@ export default function StudentDashboard() {
   const [project, setProject] = useState<StudentProject | null>(null);
   const [upcomingMeetings, setUpcomingMeetings] = useState<Meeting[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [projectRequests, setProjectRequests] = useState<ProjectRequest[]>([]);
 
   useEffect(() => {
     const user = localStorage.getItem("user");
@@ -152,6 +162,7 @@ export default function StudentDashboard() {
         setProject(data.project);
         setUpcomingMeetings(data.upcomingMeetings);
         setMembers(data.members);
+        setProjectRequests(data.projectRequests || []);
       } else {
         toast.error("Failed to load dashboard data");
       }
@@ -377,9 +388,60 @@ export default function StudentDashboard() {
               >
                 <FolderOpen className="h-12 w-12 text-zinc-700 mb-4" />
                 <h3 className="text-lg font-bold text-white">No Project Assigned</h3>
-                <p className="text-zinc-500 text-sm max-w-xs mt-2">
-                  You are not currently part of any project group. Please contact your coordinator.
+                <p className="text-zinc-500 text-sm max-w-xs mt-2 mb-6">
+                  You are not currently part of any project group.
                 </p>
+                <button
+                  onClick={() => router.push("/student/project/request")}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors"
+                >
+                  Request Project
+                </button>
+              </motion.div>
+            )}
+
+            {/* Project Requests Section */}
+            {projectRequests.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.55 }}
+                className="bg-zinc-900 border border-white/10 rounded-2xl p-6"
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="font-bold text-white">Your Project Requests</h3>
+                </div>
+                <div className="space-y-4">
+                  {projectRequests.map((req) => (
+                    <div
+                      key={req.id}
+                      className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/5 hover:border-indigo-500/30 transition-colors group"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          <h4 className="text-white font-medium group-hover:text-indigo-400 transition-colors">
+                            {req.title}
+                          </h4>
+                          <span
+                            className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${req.status === "Approved"
+                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                : req.status === "Denied"
+                                  ? "bg-red-500/10 text-red-500 border-red-500/20"
+                                  : "bg-orange-500/10 text-orange-500 border-orange-500/20"
+                              }`}
+                          >
+                            {req.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-zinc-500">
+                          <span>Faculty: {req.staffName}</span>
+                          <span className="text-zinc-700">•</span>
+                          <span>{new Date(req.created).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </motion.div>
             )}
 

@@ -19,6 +19,7 @@ import {
     AlertCircle,
     User,
     Mail,
+    UserPlus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -51,10 +52,10 @@ const SidebarItem = ({
     <div
         onClick={onClick}
         className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all ${danger
-                ? "text-red-500 hover:bg-red-500/10 hover:text-red-400"
-                : active
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+            ? "text-red-500 hover:bg-red-500/10 hover:text-red-400"
+            : active
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
+                : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
             }`}
     >
         <Icon className="h-5 w-5" />
@@ -146,6 +147,7 @@ export default function ApprovalsPage() {
                     <SidebarItem icon={LayoutDashboard} label="Dashboard" onClick={() => router.push("/staff/dashboard")} />
                     <SidebarItem icon={Users} label="My Groups" onClick={() => router.push("/staff/dashboard/my-groups")} />
                     <SidebarItem icon={FileCheck} label="Approvals" active />
+                    <SidebarItem icon={UserPlus} label="Project Requests" onClick={() => router.push("/staff/project-requests")} />
                     <SidebarItem icon={ClipboardCheck} label="Evaluations" onClick={() => router.push("/staff/evaluations")} />
                     <SidebarItem icon={Calendar} label="Schedule" onClick={() => router.push("/staff/meetings")} />
                 </nav>
@@ -202,8 +204,8 @@ export default function ApprovalsPage() {
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all capitalize ${activeTab === tab
-                                    ? "bg-indigo-600 text-white"
-                                    : "bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white"
+                                ? "bg-indigo-600 text-white"
+                                : "bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white"
                                 }`}
                         >
                             {tab === "all" ? `All (${groups.length})` : tab === "pending" ? `Pending (${pendingGroups.length})` : `Active (${activeGroups.length})`}

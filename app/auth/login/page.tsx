@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mail, Lock, GraduationCap, ArrowRight, UserCheck } from "lucide-react";
+import { Mail, Lock, GraduationCap, ArrowRight, UserCheck, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
@@ -18,12 +18,10 @@ export default function LoginPage() {
     setIsLoading(true);
 
     const formData = new FormData(e.target as HTMLFormElement);
-    const email = formData.get(
-      role == "student" ? "student_email" : "faculty_email",
-    ) as string;
-    const password = formData.get(
-      role == "student" ? "student_password" : "faculty_password",
-    ) as string;
+    const emailKey = role === "student" ? "student_email" : role === "staff" ? "faculty_email" : "admin_email";
+    const passwordKey = role === "student" ? "student_password" : role === "staff" ? "faculty_password" : "admin_password";
+    const email = formData.get(emailKey) as string;
+    const password = formData.get(passwordKey) as string;
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -101,9 +99,9 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setRole("student")}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium rounded-lg transition-all duration-300 ${role === "student"
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
-                  : "text-gray-400 hover:text-white"
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${role === "student"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
+                : "text-gray-400 hover:text-white"
                 }`}
             >
               <GraduationCap className="w-4 h-4" /> Student
@@ -111,12 +109,22 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setRole("staff")}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium rounded-lg transition-all duration-300 ${role === "staff"
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
-                  : "text-gray-400 hover:text-white"
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${role === "staff"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
+                : "text-gray-400 hover:text-white"
                 }`}
             >
               <UserCheck className="w-4 h-4" /> Faculty
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("admin")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${role === "admin"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
+                : "text-gray-400 hover:text-white"
+                }`}
+            >
+              <ShieldCheck className="w-4 h-4" /> Admin
             </button>
           </div>
 
@@ -128,11 +136,11 @@ export default function LoginPage() {
             <div className="relative group">
               <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-indigo-500 transition-colors" />
               <input
-                name={role == "student" ? "student_email" : "faculty_email"}
+                name={role === "student" ? "student_email" : role === "staff" ? "faculty_email" : "admin_email"}
                 type="email"
                 required
                 className="w-full bg-zinc-950/50 border border-white/10 text-white rounded-xl py-3 pl-10 pr-4 outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-zinc-600"
-                placeholder="name@university.edu"
+                placeholder={role === "admin" ? "admin@gmail.com" : "name@university.edu"}
               />
             </div>
           </div>
@@ -154,7 +162,7 @@ export default function LoginPage() {
               <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-indigo-500 transition-colors" />
               <input
                 name={
-                  role == "student" ? "student_password" : "faculty_password"
+                  role === "student" ? "student_password" : role === "staff" ? "faculty_password" : "admin_password"
                 }
                 type="password"
                 required

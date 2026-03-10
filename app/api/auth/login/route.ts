@@ -106,6 +106,52 @@ export async function POST(request: Request) {
     } catch (e) {
       return NextResponse.json("Error creating staff", { status: 500 });
     }
+  } else if (role == "admin") {
+    try {
+      const existingAdmin = await prisma.admin.findUnique({
+        where: { email: email },
+      });
+
+      if (!existingAdmin) {
+        return NextResponse.json("Admin not found!", { status: 404 });
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        existingAdmin.password
+      );
+
+      if (!isPasswordValid) {
+        return NextResponse.json("Incorrect password!", { status: 401 });
+      }
+
+      const token = signToken({
+        userId: existingAdmin.adminid,
+        email: existingAdmin.email || "",
+        role: "admin",
+      });
+
+      const cookieStore = await cookies();
+      cookieStore.set("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: "/",
+      });
+
+      return NextResponse.json(
+        {
+          id: existingAdmin.adminid,
+          name: existingAdmin.adminname,
+          email: existingAdmin.email,
+          role: "admin",
+        },
+        { status: 200 }
+      );
+    } catch (e) {
+      return NextResponse.json("Error signing in as admin", { status: 500 });
+    }
   } else {
     return NextResponse.json("Invalid role", { status: 400 });
   }

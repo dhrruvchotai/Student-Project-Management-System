@@ -19,6 +19,7 @@ import {
   Loader2,
   Clock,
   MapPin,
+  UserPlus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -274,6 +275,7 @@ export default function StaffDashboard() {
             onClick={() => router.push("/staff/dashboard/my-groups")}
           />
           <SidebarItem icon={FileCheck} label="Approvals" onClick={() => router.push("/staff/approvals")} />
+          <SidebarItem icon={UserPlus} label="Project Requests" onClick={() => router.push("/staff/project-requests")} />
           <SidebarItem icon={ClipboardCheck} label="Evaluations" onClick={() => router.push("/staff/evaluations")} />
           <SidebarItem icon={Calendar} label="Schedule" onClick={() => router.push("/staff/meetings")} />
         </nav>
